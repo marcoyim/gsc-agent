@@ -1,0 +1,69 @@
+# 複製為 config.toml 後再改。這裡的網址、品牌與詞彙都是虛構範例。
+# 工具不會把這些值寫死成你的網站；分析時以你這份設定為準。
+
+[oauth]
+# 桌面應用程式的 OAuth 用戶端 JSON。留空則使用使用者資料目錄裡的 client_secret.json。
+client_secrets_file = ""
+# 留空則使用使用者資料目錄裡的 token.json。不要把 token 檔提交到 Git。
+token_file = ""
+
+[storage]
+# 留空則使用使用者資料目錄裡的 gsc.sqlite。請勿把這個檔案提交到 Git。
+database_path = ""
+
+[analysis]
+# ISO 3166-1 alpha-3。比對時不分大小寫。香港是 HKG。
+target_country = "HKG"
+
+# 品牌名稱與變體。留空陣列時，查詢會標成 brand_unknown，不會被當成非品牌。
+brand_terms = ["示範港灣", "Demo Harbour"]
+
+# 服務意圖：查詢需包含其中一個詞，且不同時包含資訊意圖詞，才算服務意圖。
+service_intent_terms = ["顧問", "服務", "預約", "收費"]
+
+# 資訊意圖。若與服務意圖同時出現，分類為 mixed，不進入服務頁排名。
+informational_terms = ["是什麼", "指南", "教學"]
+
+# 依序用正則比對完整 URL。先匹配服務頁，再匹配文章頁，其餘為 other。
+service_url_patterns = ["^https://demo-harbour-services\\.example/services/"]
+article_url_patterns = ["^https://demo-harbour-services\\.example/articles/"]
+
+[scoring]
+# 以下門檻適用於你選取的整段日期，不是單日。拉長日期時應自行提高門檻。
+# 低於排名門檻的項目只放低信心附錄，不參與排名。
+min_impressions_for_ranking = 50
+
+# 低於此曝光的匹配項目標成低信心。應小於 min_impressions_for_ranking。
+low_confidence_impressions = 30
+
+# 文章頁在這段日期內的點擊達到此值，內部連結檢查才進入排名。
+min_article_clicks_for_link = 3
+
+# 排名區間各自有點擊上限。不要把同一條 CTR 基準套到所有查詢。
+# 平均排名不是固定名次；這裡只是「值得人工看一眼」的規則，不是預期 CTR。
+
+[[scoring.position_bands]]
+min_position = 4.0
+max_position = 10.0
+max_clicks = 5
+reason = "排名約 4 到 10：已離開最頂部。曝光達標而點擊仍不高於此區間自己的上限時，才建議人工檢查頁面與查詢是否對應。"
+
+[[scoring.position_bands]]
+min_position = 10.0
+max_position = 20.0
+max_clicks = 2
+reason = "排名約 10 到 20 使用另一個、更低的點擊上限。不與 4 到 10 名共用 CTR 基準。剛好落在 10.0 時，採用上面第一個匹配的區間。"
+
+[agent]
+max_tool_calls = 8
+max_output_lines = 180
+timeout_seconds = 90
+
+# none：不呼叫模型。ollama：本機，數據留在電腦。
+# openai_compatible：雲端或相容端點，必須 allow_remote = true，而且執行時加上 --allow-remote-llm。
+provider = "none"
+allow_remote = false
+ollama_host = "http://127.0.0.1:11434"
+ollama_model = "llama3.1"
+openai_base_url = ""
+openai_model = ""

@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gsc-agent"
+version = "0.1.0"
+description = "Local-first CLI that stores your Google Search Console data in SQLite and surfaces evidence-backed SEO checks."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Local GSC SEO Agent contributors" }]
+keywords = ["seo", "search-console", "gsc", "cli"]
+dependencies = [
+  "google-api-python-client>=2.149.0",
+  "google-auth>=2.35.0",
+  "google-auth-oauthlib>=1.2.1",
+  "google-auth-httplib2>=0.2.0",
+  "httpx>=0.27.0",
+  "platformdirs>=4.3.6",
+  "typer>=0.12.5",
+]
+
+[project.scripts]
+gsc-agent = "gsc_agent.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"gsc_agent.db" = ["schema.sql"]

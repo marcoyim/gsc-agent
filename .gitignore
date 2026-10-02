@@ -1,0 +1,36 @@
+# Local settings and secrets. These rules do not remove files already committed.
+.env
+config.toml
+client_secret*.json
+credentials.json
+*-credentials.json
+token.json
+*token*.json
+
+# Local databases, exports, and reports
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.db
+*.db-journal
+reports/
+demo-data/
+user-data/
+exports/
+*.csv
+*.tsv
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Operating system
+.DS_Store
