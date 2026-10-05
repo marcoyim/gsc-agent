@@ -11,6 +11,7 @@ ALLOWED_TOOLS = frozenset(
         "get_data_coverage",
         "get_property_summary",
         "get_top_queries",
+        "get_query_pages",
         "get_page_queries",
         "compare_countries",
         "compare_periods",

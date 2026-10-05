@@ -22,6 +22,7 @@ from gsc_agent.doctor import doctor_failed, format_doctor, format_property_line,
 from gsc_agent.errors import GscAgentError, LLMNotConfigured, RemoteLLMNotAllowed
 from gsc_agent.gsc.client import GoogleSearchConsoleClient
 from gsc_agent.report.markdown import render_report
+from gsc_agent.setup_llm import PLATFORMS, llm_is_ready, save_llm_settings
 from gsc_agent.sync.syncer import Syncer
 from gsc_agent.util import parse_calendar_date, redact
 
@@ -58,6 +59,62 @@ def _report_path(site_url: str, start: str, end: str, output: Optional[Path]) ->
 def _write_report(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+@app.command()
+def setup(
+    config: Optional[Path] = _config_opt(),
+    env_file: Path = typer.Option(Path(".env"), "--env-file", help="API key 寫入這個檔案。不要提交它。"),
+    check: bool = typer.Option(False, "--check", help="只檢查是否已有網址、模型與 key，不詢問。"),
+) -> None:
+    """先選平台，再保存網址與模型。遠端平台的 key 只寫入 .env。"""
+    config_path = config or resolve_config_path() or Path("config.toml")
+    if check:
+        raise typer.Exit(code=0 if llm_is_ready(config_path, env_file) else 2)
+    typer.echo("選一個平台。不需要 OpenAI。")
+    for index, platform in enumerate(PLATFORMS, start=1):
+        typer.echo(f"{index}. {platform.label}")
+    raw_choice = typer.prompt("輸入編號").strip()
+    if not raw_choice.isdigit() or not 1 <= int(raw_choice) <= len(PLATFORMS):
+        typer.echo("請輸入清單上的編號。沒有寫入。", err=True)
+        raise typer.Exit(code=1)
+    platform = PLATFORMS[int(raw_choice) - 1]
+    try:
+        if platform.kind == "ollama":
+            host = typer.prompt("Ollama 網址", default=platform.base_url).strip()
+            model = typer.prompt("模型名稱", default=platform.model).strip()
+            save_llm_settings(config_path, env_file, base_url=host, model=model, provider="ollama")
+            typer.echo("已改用本機 Ollama。這次不需要 API key，搜尋資料不會送到雲端。")
+            typer.echo("請先在這台電腦安裝並啟動 Ollama，而且已經下載你填的模型。")
+            return
+        if platform.kind == "custom":
+            base_url = typer.prompt("AI 網址（以 /v1 或相容路徑結尾）").strip()
+            model = typer.prompt("模型名稱").strip()
+            key_hint = platform.key_hint
+        else:
+            base_url = typer.prompt("AI 網址", default=platform.base_url).strip()
+            model = typer.prompt("模型名稱", default=platform.model).strip()
+            key_hint = platform.key_hint
+        typer.echo(f"搜尋字、網址和指標會送到 {base_url}。")
+        typer.echo(f"請貼上{key_hint}。輸入時不會顯示。")
+        api_key = typer.prompt("API key", hide_input=True)
+        confirm = typer.prompt("再輸入一次 API key", hide_input=True)
+        if api_key != confirm:
+            typer.echo("兩次 API key 不相同。沒有寫入。", err=True)
+            raise typer.Exit(code=1)
+        save_llm_settings(
+            config_path,
+            env_file,
+            base_url=base_url,
+            model=model,
+            api_key=api_key,
+            provider="openai_compatible",
+        )
+    except GscAgentError as exc:
+        typer.echo(redact(str(exc)), err=True)
+        raise typer.Exit(code=1) from None
+    typer.echo(f"已寫入平台網址與模型到 {config_path}。")
+    typer.echo(f"API key 已寫入 {env_file}，權限設為本人可讀。key 內容不會顯示。")
 
 
 @app.command()

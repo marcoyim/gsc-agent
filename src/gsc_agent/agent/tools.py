@@ -87,6 +87,29 @@ def get_top_queries(ctx: Any, arguments: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def get_query_pages(ctx: Any, arguments: dict[str, Any]) -> dict[str, Any]:
+    start, end = _dates(ctx, arguments)
+    equals: dict[str, str] = {}
+    country = arguments.get("country")
+    if isinstance(country, str) and country.strip():
+        equals["country"] = country.strip()
+    rows = ctx.store.grouped_rows(
+        "query_page_country",
+        ctx.property_id,
+        start,
+        end,
+        equals=equals or None,
+        limit=_limit(arguments, default=40),
+    )
+    return {
+        "executed": True,
+        "source_dataset": "query_page_country",
+        "not_site_total": True,
+        "note": _COVERAGE_NOTE + " 每一列是一個查詢在一個頁面上的表現，不是網站總數。",
+        "rows": [_public_detail_row(row) for row in rows],
+    }
+
+
 def get_page_queries(ctx: Any, arguments: dict[str, Any]) -> dict[str, Any]:
     page = arguments.get("page")
     if not isinstance(page, str) or not page.strip():
@@ -184,8 +207,8 @@ def _dates(ctx: Any, arguments: dict[str, Any]) -> tuple[str, str]:
     return start, end
 
 
-def _limit(arguments: dict[str, Any]) -> int:
-    raw = arguments.get("limit", 20)
+def _limit(arguments: dict[str, Any], default: int = 20) -> int:
+    raw = arguments.get("limit", default)
     try:
         value = int(raw)
     except (TypeError, ValueError):

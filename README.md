@@ -84,22 +84,18 @@ gsc-agent report --config config.toml \
 
 Replace `https://example.com/` with the string from `properties`. Dates are Search Console calendar dates in Pacific Time, including both ends. The program does not convert them to your local time zone.
 
-## Optional local analysis agent
+## Language model for the written recommendations
 
-`analyze` and `report` do not call a language model. `agent` does, and only if you configure one.
+`analyze` and `report` do not call a language model. They only print recorded figures and the rule checks. The short priority list — which queries to change, and whether the current page matches the search — comes from `agent`.
 
-For a model on this computer, install [Ollama](https://ollama.com/), set `provider` to `ollama`, and keep `ollama_host` on `127.0.0.1` or `localhost`.
+Run setup once. It asks which platform you use. You do not need OpenAI. The choices are a local Ollama install, DeepSeek, Google Gemini, Qwen on the Hong Kong endpoint, or any other compatible URL you paste in. A remote platform then asks for its API key. The key is saved in `.env` with permissions limited to your user. It is not written into `config.toml` and it is not printed. Ollama does not ask for a key, and the search data stays on this computer.
 
 ```bash
-gsc-agent agent --config config.toml \
-  --property "https://example.com/" \
-  --start 2026-01-01 --end 2026-01-31 \
-  --target-country HKG
+./setup.sh
+./start.sh "https://example.com/" 2026-01-01 2026-01-31
 ```
 
-A non-local Ollama address, or `provider = "openai_compatible"`, is refused unless `allow_remote` is `true` in `config.toml` and you pass `--allow-remote-llm`. The command warns first: queries, URLs, and metrics will leave this computer.
-
-The agent can only call a fixed set of read tools, with a limit on calls, output lines, and time. It cannot run shell commands or change the database.
+If you pick a remote platform, `./start.sh` sends queries, URLs, and metrics to that platform. If you pick Ollama, they stay on this computer. The agent can only call a fixed set of read tools. It cannot run shell commands or change the database. Its conclusion can be wrong; the recorded-figures section is the source for numbers. It still cannot say which query brought a customer. A non-local address is refused unless setup recorded your choice and the command includes `--allow-remote-llm`. `./start.sh` adds that flag for you.
 
 ## How the data is stored
 

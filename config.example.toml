@@ -59,8 +59,8 @@ max_tool_calls = 8
 max_output_lines = 180
 timeout_seconds = 90
 
-# none：不呼叫模型。ollama：本機，數據留在電腦。
-# openai_compatible：雲端或相容端點，必須 allow_remote = true，而且執行時加上 --allow-remote-llm。
+# none：不呼叫模型。執行 ./setup.sh 時會先選平台：本機 Ollama、DeepSeek、Gemini、香港 Qwen，或自訂網址。
+# 遠端平台的 key 只進 .env。本機 Ollama 不需要 key。
 provider = "none"
 allow_remote = false
 ollama_host = "http://127.0.0.1:11434"

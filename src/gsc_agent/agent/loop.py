@@ -26,6 +26,7 @@ SYSTEM_PROMPT = """你是本機 Search Console 分析助手。你必須用 ReAct
 - get_data_coverage
 - get_property_summary
 - get_top_queries
+- get_query_pages（查詢對上的頁面。寫建議前先呼叫它）
 - get_page_queries（action_input 需要 page）
 - compare_countries
 - compare_periods（需要 start_a、end_a、start_b、end_b）
@@ -38,6 +39,8 @@ SYSTEM_PROMPT = """你是本機 Search Console 分析助手。你必須用 ReAct
 - 沒有詢盤或成交數據。不可宣稱某個關鍵字帶來客戶。
 - 網站總覽只來自 get_property_summary。其他工具的合計不是網站總數。
 - 工具沒有返回的查詢不是曝光 0。
+- final 用繁體中文，最多三組。每組寫出搜尋字、曝光、平均排名、點擊、現在顯示的頁面，以及要改標題、新增頁面或加內部連結。
+- 排序依據是：比較像在找服務，而且現有頁面對不上。品牌字若已在前兩名並有點擊，不要列進要優化的項目。
 """
 
 
@@ -68,7 +71,9 @@ def run_react(
 ) -> AgentResult:
     question = question or (
         f"在 {ctx.start_date} 至 {ctx.end_date}（太平洋時間）、目標國家 {ctx.target_country}，"
-        "有哪些值得人工驗證的非品牌服務頁機會？只用工具結果，不要編造數字或轉換率。"
+        "先看網站總覽，再看查詢對上的頁面，寫出最多三組優先建議。"
+        "每一組包含搜尋字、曝光、平均排名、點擊、Google 現在顯示的頁，以及應改的頁面動作。"
+        "優先比較像在找服務、但現有頁面對不上的項目。只用工具結果，不要編造數字或轉換率。"
     )
     max_calls = int(ctx.config.agent.max_tool_calls)
     max_lines = int(ctx.config.agent.max_output_lines)
